@@ -12,6 +12,7 @@ from app.api.deps import get_current_user, get_db
 from app.api.middleware.rate_limit import limiter
 from app.core.config import settings
 from app.core.exceptions import NotFoundError
+from app.core.guardrails import validate_task_input
 from app.db.models import Task, TaskStatus, User
 from app.schemas.task import TaskCreate, TaskListRead, TaskRead
 
@@ -27,6 +28,7 @@ async def create_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Task:
+    validate_task_input(payload.description)
     task = Task(
         title=payload.title,
         description=payload.description,
