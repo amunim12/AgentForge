@@ -89,7 +89,7 @@ jobs:
       - name: Build backend image
         run: docker build -t agentforge-backend:scan -f backend/Dockerfile backend/
       - name: Scan image (HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: agentforge-backend:scan
           format: sarif
