@@ -26,4 +26,4 @@ detect-secrets==1.5.0
 # Dev Utilities
 # ============================================
 pre-commit==3.7.1
-ipython==8.25.0
+ipython==9.13.0
