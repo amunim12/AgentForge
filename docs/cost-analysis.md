@@ -43,6 +43,30 @@ Token math drives this tier. Assume a 5k-token round trip per task per agent (pl
 
 The Critic dominates because Gemini Pro output tokens are expensive. If cost matters, swap the Critic to Gemini Flash and accept a quality drop, or run the Critic only every Nth iteration.
 
+## Same scale on AWS (the primary deploy target)
+
+Same usage pattern, but on the ECS Fargate + RDS architecture in `infra/`. Numbers are us-east-1 list price, single-AZ where the module allows it.
+
+| Component | Configuration | Monthly cost |
+| --- | --- | --- |
+| ECS Fargate task (backend) | 0.5 vCPU + 1 GB, 1 task always-on | ~$13 |
+| Application Load Balancer | 1 ALB, light traffic | ~$17 |
+| NAT Gateway | 1 NAT, mostly idle (egress for ECS â external LLM/Redis) | ~$33 + data |
+| RDS Postgres | db.t4g.micro, 20 GB gp3, single-AZ | $0 first year (free tier) â then ~$13 |
+| ECR | <500 MB stored | <$1 |
+| Secrets Manager | ~10 secrets | ~$4 |
+| CloudWatch Logs | 14-day retention, low volume | ~$1 |
+| Amplify Hosting (frontend) | Build minutes + low traffic | ~$5 |
+| LLM tokens (same as production scale above) | â | ~$280 |
+| **Total (year 1, free RDS)** | | **~$355 / month** |
+| **Total (after free tier)** | | **~$370 / month** |
+
+Things that move this number:
+
+- The **NAT Gateway** is the single biggest infra line. It exists so private-subnet ECS tasks can reach Google/Groq/Tavily/E2B/Upstash. Replacing it with VPC endpoints helps for AWS-internal services (Secrets Manager, ECR, CloudWatch) but the LLM calls still need NAT egress. A small NAT instance is ~$5/month and an option for non-prod.
+- **Multi-AZ RDS** doubles the DB line. Off by default in this Terraform.
+- **Fargate Spot** for non-critical environments cuts compute by ~70%. The cluster is wired for Spot; flip the strategy weight to use it.
+
 ## Levers that move the bill
 
 - `MAX_CRITIC_ITERATIONS` â each retry roughly doubles token spend on that task. Default is 3.

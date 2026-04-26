@@ -1,0 +1,31 @@
+# Copy to terraform.tfvars and fill in real values. NEVER commit terraform.tfvars.
+# For secrets, prefer environment variables: TF_VAR_app_secret_values='{...}'.
+
+aws_region   = "us-east-1"
+project_name = "agentforge"
+environment  = "prod"
+
+# CORS â list of frontend origins. Add your Amplify domain after first apply.
+allowed_origins = ["http://localhost:3000"]
+
+# GitHub OIDC trust â must match the repo running deploy.yml.
+github_owner = "your-github-org"
+github_repo  = "agentforge"
+
+# Amplify (frontend). Leave amplify_repository_url empty to skip the frontend module.
+amplify_repository_url = "https://github.com/your-github-org/agentforge"
+amplify_branch         = "main"
+# amplify_github_token = "ghp_..."   # prefer: TF_VAR_amplify_github_token
+
+# Application secrets â load from a vault, not this file.
+# Recommended: TF_VAR_app_secret_values='{"SECRET_KEY":"...", ...}'
+app_secret_values = {
+  SECRET_KEY               = "REPLACE_ME_64_HEX_CHARS"
+  GOOGLE_API_KEY           = "REPLACE_ME"
+  GROQ_API_KEY             = "REPLACE_ME"
+  TAVILY_API_KEY           = "REPLACE_ME"
+  LANGCHAIN_API_KEY        = "REPLACE_ME"
+  E2B_API_KEY              = "REPLACE_ME"
+  UPSTASH_REDIS_REST_URL   = "https://..."
+  UPSTASH_REDIS_REST_TOKEN = "REPLACE_ME"
+}

@@ -87,6 +87,30 @@ App: http://localhost:3000
 docker-compose up --build
 ```
 
+## Deploying to AWS
+
+AWS is the primary deploy target. The architecture:
+
+- **Backend** â ECS Fargate behind an Application Load Balancer (WebSocket-friendly via long idle timeout + LB stickiness)
+- **Database** â RDS Postgres in private subnets, password held in Secrets Manager
+- **Image registry** â ECR with scan-on-push
+- **Secrets** â one Secrets Manager entry per app env var, mounted into the task definition (no plaintext in CloudTrail)
+- **Frontend** â AWS Amplify Hosting (Next.js SSR), wired to the backend ALB
+- **CI/CD** â GitHub Actions assumes a scoped role via OIDC; no long-lived AWS keys
+
+```bash
+# One-time bootstrap (state bucket + GitHub OIDC provider): see infra/README.md.
+
+cd infra
+cp terraform.tfvars.example terraform.tfvars   # fill in secrets via TF_VAR_* env vars
+terraform init -backend-config="bucket=agentforge-tfstate-$ACCOUNT_ID"
+terraform apply
+```
+
+After the first apply, copy the role ARN, ECR repo, cluster + service names from `terraform output` into the GitHub repo secrets/variables consumed by [.github/workflows/deploy-aws.yml](.github/workflows/deploy-aws.yml). Subsequent merges to `main` build the image, push to ECR, and force a service redeploy.
+
+The Render + Vercel path still works for low-cost hosting â it's just no longer the primary recommendation.
+
 ## Running tests
 
 ```bash
@@ -120,7 +144,8 @@ agentforge/
 │  ├─ hooks/            useTasks, useTaskStream (WS), useAgentStatus
 │  ├─ stores/           Zustand task-stream store
 │  └─ providers/        TanStack Query, theme, toaster
-├─ .github/             ci.yml, security.yml, deploy.yml, dependabot.yml
+├─ infra/               Terraform (AWS): VPC, ECS Fargate, ALB, RDS, ECR, IAM/OIDC, Amplify
+├─ .github/             ci.yml, security.yml, deploy.yml, deploy-aws.yml, dependabot.yml
 └─ docker-compose.yml
 ```
 
@@ -135,13 +160,12 @@ All backend settings come through `app.core.config.Settings` (Pydantic). Require
 | `MAX_TOKENS_PER_AGENT`     | 4096    | Per-agent generation cap               |
 | `RATE_LIMIT_TASK_CREATE`   | 10/hour | Throttle on `POST /api/tasks`          |
 
-## Security
+## Documentation
 
-See [SECURITY.md](SECURITY.md) for the threat model, supported versions, and how to report vulnerabilities.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+- [docs/architecture.md](docs/architecture.md) â Architecture Decision Records (ADRs) for the major design choices
+- [docs/cost-analysis.md](docs/cost-analysis.md) â What this costs at portfolio scale and what changes at production scale
+- [SECURITY.md](SECURITY.md) â Threat model, supported versions, vulnerability reporting
+- [CONTRIBUTING.md](CONTRIBUTING.md) â Dev setup, conventions, PR checklist
 
 ## License
 
