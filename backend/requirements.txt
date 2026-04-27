@@ -1,9 +1,9 @@
 # ============================================
 # Web Framework
 # ============================================
-fastapi==0.111.0
-uvicorn[standard]==0.30.1
-python-multipart==0.0.9
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+python-multipart==0.0.26
 websockets==12.0
 
 # ============================================
@@ -14,14 +14,14 @@ langchain-core==0.2.9
 langgraph==0.1.14
 langchain-google-genai==1.0.6
 langchain-groq==0.1.6
-langchain-community==0.2.5
+langchain-community==0.4.1
 langchain-chroma==0.1.1
-langsmith==0.1.77
+langsmith==0.7.37
 
 # ============================================
 # Tools
 # ============================================
-tavily-python==0.3.3
+tavily-python==0.7.23
 e2b-code-interpreter==0.0.10
 
 # ============================================
@@ -32,19 +32,19 @@ chromadb==0.5.3
 # ============================================
 # Database (SQLite dev / PostgreSQL prod ready)
 # ============================================
-sqlmodel==0.0.19
-aiosqlite==0.20.0
-sqlalchemy==2.0.30
+sqlmodel==0.0.38
+aiosqlite==0.22.1
+sqlalchemy==2.0.49
 
 # ============================================
 # Redis (Upstash serverless REST)
 # ============================================
-upstash-redis==1.1.0
+upstash-redis==1.7.0
 
 # ============================================
 # Auth & Security
 # ============================================
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.3
 slowapi==0.1.9
@@ -52,9 +52,9 @@ slowapi==0.1.9
 # ============================================
 # Validation & Config
 # ============================================
-pydantic==2.7.4
-pydantic-settings==2.3.3
-email-validator==2.2.0
+pydantic==2.13.3
+pydantic-settings==2.14.0
+email-validator==2.3.0
 
 # ============================================
 # Logging
@@ -64,9 +64,9 @@ structlog==24.2.0
 # ============================================
 # HTTP Client
 # ============================================
-httpx==0.27.0
+httpx==0.28.1
 
 # ============================================
 # Embeddings
 # ============================================
-google-generativeai==0.7.1
+google-generativeai==0.8.6
