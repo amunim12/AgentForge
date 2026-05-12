@@ -1,11 +1,11 @@
 """Task CRUD + agent-pipeline kickoff endpoints."""
-from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col
 
 from app.agents.orchestrator import run_agent_pipeline
 from app.api.deps import get_current_user, get_db
@@ -19,10 +19,11 @@ from app.schemas.task import TaskCreate, TaskListRead, TaskRead
 router = APIRouter()
 
 
-@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 @limiter.limit(settings.RATE_LIMIT_TASK_CREATE)
 async def create_task(
     request: Request,
+    response: Response,
     payload: TaskCreate,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -45,7 +46,7 @@ async def create_task(
     return task
 
 
-@router.get("/", response_model=list[TaskListRead])
+@router.get("", response_model=list[TaskListRead])
 async def list_tasks(
     skip: int = 0,
     limit: int = 20,
@@ -56,8 +57,8 @@ async def list_tasks(
     limit = max(1, min(limit, 100))
     result = await db.execute(
         select(Task)
-        .where(Task.user_id == current_user.id)
-        .order_by(Task.created_at.desc())
+        .where(col(Task.user_id) == current_user.id)
+        .order_by(col(Task.created_at).desc())
         .offset(skip)
         .limit(limit)
     )
@@ -102,7 +103,7 @@ async def cancel_task(
         return task
     task.status = TaskStatus.FAILED
     task.error_message = "Cancelled by user"
-    task.updated_at = datetime.utcnow()
+    task.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(task)
     return task

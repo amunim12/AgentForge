@@ -1,8 +1,8 @@
 """Async SQLModel session management."""
-from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
@@ -12,11 +12,21 @@ from app.core.config import settings
 # Import all models so SQLModel.metadata knows about them at create_all time.
 from app.db import models  # noqa: F401
 
+_pool_kwargs: dict[str, Any] = {}
+# SQLite uses StaticPool (no pool config); only apply pool settings for real databases.
+if not settings.DATABASE_URL.startswith("sqlite"):
+    _pool_kwargs = {
+        "pool_size": settings.DB_POOL_SIZE,
+        "max_overflow": settings.DB_MAX_OVERFLOW,
+        "pool_timeout": settings.DB_POOL_TIMEOUT,
+    }
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
     pool_pre_ping=True,
+    **_pool_kwargs,
 )
 
 async_session_factory = async_sessionmaker(

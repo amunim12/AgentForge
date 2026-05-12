@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import structlog
 from langchain_core.tools import tool
@@ -21,7 +22,7 @@ def _get_client() -> TavilyClient:
     return _client
 
 
-def _format_results(raw: dict) -> str:
+def _format_results(raw: dict[str, Any]) -> str:
     results = raw.get("results", []) or []
     if not results:
         return "No results found."
@@ -58,13 +59,13 @@ async def web_search(query: str, max_results: int = 5) -> str:
     """
     bounded = max(1, min(int(max_results), 10))
 
-    def _run() -> dict:
-        return _get_client().search(
+    def _run() -> dict[str, Any]:
+        return dict(_get_client().search(
             query=query,
             max_results=bounded,
             search_depth="advanced",
             include_answer=True,
-        )
+        ))
 
     try:
         raw = await asyncio.to_thread(_run)

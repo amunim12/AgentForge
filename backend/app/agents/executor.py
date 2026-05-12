@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import BaseTool
 from langchain_groq import ChatGroq
 
 from app.agents.prompts.executor import EXECUTOR_SYSTEM_PROMPT
@@ -20,15 +21,14 @@ from app.tools.web_search import web_search
 
 logger = structlog.get_logger()
 
-_MAX_AGENT_ITERATIONS = 15
 
 
 def _build_llm() -> ChatGroq:
     return ChatGroq(
-        groq_api_key=settings.GROQ_API_KEY,
-        model_name="llama-3.1-70b-versatile",
+        model="llama-3.1-70b-versatile",
         temperature=0.1,
         max_tokens=settings.MAX_TOKENS_PER_AGENT,
+        stop_sequences=[],
     )
 
 
@@ -47,9 +47,9 @@ def _build_prompt() -> ChatPromptTemplate:
     )
 
 
-async def _emit_tool_calls(task_id: str, intermediate_steps: list[Any]) -> list[dict]:
+async def _emit_tool_calls(task_id: str, intermediate_steps: list[Any]) -> list[dict[str, Any]]:
     """Publish tool-call events to the WebSocket and return a serializable log."""
-    events: list[dict] = []
+    events: list[dict[str, Any]] = []
     for action, observation in intermediate_steps:
         tool_name = getattr(action, "tool", "unknown")
         tool_input = getattr(action, "tool_input", None)
@@ -90,7 +90,7 @@ async def run_executor(
     reset_notebook()
 
     llm = _build_llm()
-    tools = [web_search, code_executor, file_tool]
+    tools = cast(list[BaseTool], [web_search, code_executor, file_tool])
     prompt = _build_prompt()
 
     try:
@@ -103,7 +103,7 @@ async def run_executor(
         agent=agent,
         tools=tools,
         verbose=False,
-        max_iterations=_MAX_AGENT_ITERATIONS,
+        max_iterations=settings.MAX_AGENT_ITERATIONS,
         handle_parsing_errors=True,
         return_intermediate_steps=True,
     )

@@ -1,5 +1,4 @@
 """Pydantic schemas for task endpoints."""
-from __future__ import annotations
 
 import json
 from datetime import datetime

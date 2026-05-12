@@ -1,5 +1,4 @@
 """Pydantic schemas for agent state and WebSocket events."""
-from __future__ import annotations
 
 from typing import Any, Literal
 

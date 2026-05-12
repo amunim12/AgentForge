@@ -3,13 +3,39 @@
 All secrets and environment-specific values must come through this module.
 Never read os.environ directly from application code.
 """
-from __future__ import annotations
 
 import json
 from functools import lru_cache
+from typing import Any
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    EnvSettingsSource,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
+
+
+class _OriginsEnvSource(EnvSettingsSource):
+    """pydantic-settings v2 treats list[str] as a "complex" field and requires
+    the env var to be JSON-parseable.  That breaks comma-separated and plain-URL
+    values that our field validator is designed to handle.
+
+    Bypassing complex-field handling for ALLOWED_ORIGINS lets the raw string
+    reach the field validator, which already supports JSON, CSV, and plain URLs.
+    """
+
+    def prepare_field_value(
+        self,
+        field_name: str,
+        field: Any,
+        value: Any,
+        value_is_complex: bool,
+    ) -> Any:
+        if field_name == "ALLOWED_ORIGINS" and isinstance(value, str):
+            return value
+        return super().prepare_field_value(field_name, field, value, value_is_complex)
 
 
 class Settings(BaseSettings):
@@ -71,6 +97,19 @@ class Settings(BaseSettings):
     MAX_CRITIC_ITERATIONS: int = 3
     CRITIC_SCORE_THRESHOLD: float = 0.75
     MAX_TOKENS_PER_AGENT: int = 4096
+    MAX_AGENT_ITERATIONS: int = 15
+
+    # --------------------------------------------------------------------
+    # Database Connection Pool
+    # --------------------------------------------------------------------
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT: int = 30
+
+    # --------------------------------------------------------------------
+    # ChromaDB Auth (optional)
+    # --------------------------------------------------------------------
+    CHROMA_AUTH_TOKEN: str = ""
 
     # --------------------------------------------------------------------
     # LangSmith Tracing
@@ -111,11 +150,27 @@ class Settings(BaseSettings):
             raise ValueError("CRITIC_SCORE_THRESHOLD must be between 0.0 and 1.0")
         return v
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,  # noqa: ARG002 — replaced by _OriginsEnvSource
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            _OriginsEnvSource(settings_cls, case_sensitive=cls.model_config.get("case_sensitive")),
+            dotenv_settings,
+            file_secret_settings,
+        )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return a cached Settings instance. Cached so env is parsed once."""
-    return Settings()  # type: ignore[call-arg]
+    return Settings()
 
 
 settings = get_settings()

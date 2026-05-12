@@ -1,14 +1,13 @@
 """SQLModel database models for AgentForge."""
-from __future__ import annotations
 
 import uuid
-from datetime import datetime
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from sqlmodel import Field, Relationship, SQLModel
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     PENDING = "pending"
     PLANNING = "planning"
     EXECUTING = "executing"
@@ -17,7 +16,7 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
 
 
-class AgentStatus(str, Enum):
+class AgentStatus(StrEnum):
     IDLE = "idle"
     RUNNING = "running"
     DONE = "done"
@@ -29,7 +28,7 @@ def _uuid() -> str:
 
 
 def _utcnow() -> datetime:
-    return datetime.utcnow()
+    return datetime.now(UTC)
 
 
 class User(SQLModel, table=True):

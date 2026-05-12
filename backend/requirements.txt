@@ -9,14 +9,14 @@ websockets==12.0
 # ============================================
 # LLM + Agents
 # ============================================
-langchain==0.2.5
-langchain-core==0.2.9
-langgraph==0.1.14
-langchain-google-genai==1.0.6
-langchain-groq==0.1.6
-langchain-community==0.2.5
-langchain-chroma==0.1.1
-langsmith==0.1.77
+langchain==0.2.16
+langchain-core==0.2.43
+langgraph==0.1.19
+langchain-google-genai==1.0.10
+langchain-groq==0.1.9
+langchain-community==0.2.16
+# langchain-chroma==0.1.4  # optional — see Vector Store note below
+langsmith==0.1.147
 
 # ============================================
 # Tools
@@ -25,9 +25,11 @@ tavily-python==0.3.3
 e2b-code-interpreter==0.0.10
 
 # ============================================
-# Vector Store
+# Vector Store (optional — requires MSVC on Windows to build chroma-hnswlib;
+# RAG memory is disabled gracefully when not installed)
+# To enable: pip install chromadb==0.5.3 langchain-chroma==0.1.4
 # ============================================
-chromadb==0.5.3
+# chromadb==0.5.3
 
 # ============================================
 # Database (SQLite dev / PostgreSQL prod ready)
@@ -44,7 +46,7 @@ upstash-redis==1.1.0
 # ============================================
 # Auth & Security
 # ============================================
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.3
 slowapi==0.1.9

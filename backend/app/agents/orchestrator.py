@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
 import structlog
@@ -123,7 +123,7 @@ def should_rerun(state: AgentState) -> str:
 # ---------------------------------------------------------------------------
 # Graph
 # ---------------------------------------------------------------------------
-def build_graph():
+def build_graph() -> Any:  # langgraph CompiledGraph has no public type stub
     graph: StateGraph = StateGraph(AgentState)
     graph.add_node("planner", planner_node)
     graph.add_node("executor", executor_node)
@@ -140,7 +140,7 @@ def build_graph():
     return graph.compile()
 
 
-agent_graph = build_graph()
+agent_graph: Any = build_graph()
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +152,7 @@ async def _update_task_status(task_id: str, status: TaskStatus) -> None:
         if task is None:
             return
         task.status = status
-        task.updated_at = datetime.utcnow()
+        task.updated_at = datetime.now(UTC)
         await db.commit()
 
 
@@ -165,7 +165,7 @@ async def _persist_task_field(task_id: str, **fields: Any) -> None:
             return
         for key, value in fields.items():
             setattr(task, key, value)
-        task.updated_at = datetime.utcnow()
+        task.updated_at = datetime.now(UTC)
         await db.commit()
 
 
@@ -186,7 +186,7 @@ async def _finalize_task(
         task.final_result = final_output
         task.critic_score = score
         task.iteration_count = int(final_state.get("iteration", 0))
-        task.completed_at = datetime.utcnow()
+        task.completed_at = datetime.now(UTC)
         task.updated_at = task.completed_at
         await db.commit()
 
@@ -201,8 +201,8 @@ async def _finalize_task(
                 "step": 0,
             },
         )
-    except Exception:  # pragma: no cover
-        pass
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Failed to store task memory", error=str(exc))
 
 
 async def _mark_failed(task_id: str, error: str) -> None:
@@ -212,7 +212,7 @@ async def _mark_failed(task_id: str, error: str) -> None:
             return
         task.status = TaskStatus.FAILED
         task.error_message = error[:1000]
-        task.updated_at = datetime.utcnow()
+        task.updated_at = datetime.now(UTC)
         await db.commit()
 
 
@@ -245,7 +245,7 @@ async def run_agent_pipeline(task_id: str, task_description: str) -> None:
     }
 
     try:
-        final_state: AgentState = await agent_graph.ainvoke(initial_state)  # type: ignore[assignment]
+        final_state: AgentState = await agent_graph.ainvoke(initial_state)
     except AgentForgeError as exc:
         logger.warning("Agent pipeline aborted", task_id=task_id, error=str(exc))
         await _mark_failed(task_id, exc.public_message)
@@ -254,7 +254,7 @@ async def run_agent_pipeline(task_id: str, task_description: str) -> None:
             {"type": "task_failed", "error": exc.public_message},
         )
         return
-    except Exception as exc:
+    except Exception:
         logger.exception("Agent pipeline crashed", task_id=task_id)
         await _mark_failed(task_id, "Agent pipeline failed")
         await publish_task_update(

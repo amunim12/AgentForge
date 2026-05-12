@@ -3,7 +3,8 @@
 We never leak internal/LLM error messages to clients â the registrar maps
 each exception class to a sanitized HTTP response.
 """
-from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 
 import structlog
 from fastapi import FastAPI, Request, status
@@ -49,7 +50,7 @@ class AgentExecutionError(AgentForgeError):
     public_message = "Agent pipeline failed. Please retry."
 
 
-def _build_handler(_status: int):
+def _build_handler() -> Callable[[Request, AgentForgeError], Awaitable[JSONResponse]]:
     async def _handler(_request: Request, exc: AgentForgeError) -> JSONResponse:
         logger.warning(
             "AgentForge error",
@@ -74,5 +75,5 @@ async def _unhandled_handler(_request: Request, exc: Exception) -> JSONResponse:
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Wire up application exception handlers on app startup."""
-    app.add_exception_handler(AgentForgeError, _build_handler(0))  # type: ignore[arg-type]
+    app.add_exception_handler(AgentForgeError, _build_handler())  # type: ignore[arg-type]
     app.add_exception_handler(Exception, _unhandled_handler)

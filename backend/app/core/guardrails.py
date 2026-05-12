@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import re
 
-from app.core.exceptions import AgentForgeError
 from fastapi import status
 
+from app.core.exceptions import AgentForgeError
 
-class GuardrailViolation(AgentForgeError):
+
+class GuardrailViolationError(AgentForgeError):
     status_code = status.HTTP_400_BAD_REQUEST
     public_message = "Input rejected by content guardrails."
 
@@ -34,18 +35,18 @@ _BLOCKED_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 _MAX_OUTPUT_CHARS = 16_000
-_REDACT_TOKEN = "[redacted]"
+_REDACT_TOKEN = "[redacted]"  # noqa: S105
 
 
 def validate_task_input(description: str) -> None:
-    """Raise GuardrailViolation if the description trips a blocked pattern.
+    """Raise GuardrailViolationError if the description trips a blocked pattern.
 
     Length is already enforced by the Pydantic schema; we only check
     patterns here so this stays a single-pass scan.
     """
     for pattern in _BLOCKED_PATTERNS:
         if pattern.search(description):
-            raise GuardrailViolation()
+            raise GuardrailViolationError()
 
 
 def sanitize_agent_output(text: str) -> str:

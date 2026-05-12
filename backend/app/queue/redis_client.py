@@ -91,7 +91,7 @@ async def publish_task_update(task_id: str, message: dict[str, Any]) -> None:
     await _broker.publish(task_id, message)
     try:
         stream_key = f"{TASK_CHANNEL_PREFIX}{task_id}"
-        await get_redis().xadd(
+        await get_redis().xadd(  # type: ignore[attr-defined]  # upstash_redis stubs omit xadd
             stream_key,
             {"payload": json.dumps(message)},
             maxlen=STREAM_MAX_LEN,
@@ -126,6 +126,6 @@ async def close_redis() -> None:
     if _redis_client is not None:
         try:
             await _redis_client.close()
-        except Exception:  # pragma: no cover
-            pass
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Failed to close Redis client", error=str(exc))
         _redis_client = None

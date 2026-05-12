@@ -42,8 +42,8 @@ def _run_in_sandbox(code: str) -> str:
         if logs is not None:
             stdout = "\n".join(getattr(logs, "stdout", []) or [])
             stderr = "\n".join(getattr(logs, "stderr", []) or [])
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to read execution logs", error=str(exc))
 
     error_obj = getattr(execution, "error", None)
     error_text = ""
@@ -59,8 +59,8 @@ def _run_in_sandbox(code: str) -> str:
             if text:
                 result_reprs.append(text)
         results_text = "\n".join(result_reprs)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to read execution results", error=str(exc))
 
     sections: list[str] = []
     if stdout:

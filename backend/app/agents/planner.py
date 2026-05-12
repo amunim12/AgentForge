@@ -29,7 +29,6 @@ def _strip_fences(text: str) -> str:
 def _build_llm() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
-        google_api_key=settings.GOOGLE_API_KEY,
         temperature=0.1,
         max_output_tokens=settings.MAX_TOKENS_PER_AGENT,
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.guardrails import (
-    GuardrailViolation,
+    GuardrailViolationError,
     sanitize_agent_output,
     validate_task_input,
 )
@@ -27,7 +27,7 @@ def test_validate_passes_clean_input() -> None:
     ],
 )
 def test_validate_rejects_blocked_patterns(bad: str) -> None:
-    with pytest.raises(GuardrailViolation):
+    with pytest.raises(GuardrailViolationError):
         validate_task_input(bad)
 
 

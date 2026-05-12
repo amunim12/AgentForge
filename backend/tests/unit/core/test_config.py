@@ -5,7 +5,6 @@ import pytest
 
 from app.core.config import Settings
 
-
 _BASE_ENV = {
     "SECRET_KEY": "x" * 48,
     "GOOGLE_API_KEY": "g",

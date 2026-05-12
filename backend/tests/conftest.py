@@ -35,7 +35,11 @@ for _k, _v in _TEST_ENV.items():
 
 
 from httpx import ASGITransport, AsyncClient  # noqa: E402
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlmodel import SQLModel  # noqa: E402
 
 from app.api.deps import get_db  # noqa: E402

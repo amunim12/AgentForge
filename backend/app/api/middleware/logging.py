@@ -1,10 +1,10 @@
 """Structured-logging HTTP middleware."""
-from __future__ import annotations
 
 import logging
 import sys
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 
 import structlog
 from fastapi import Request
@@ -20,7 +20,6 @@ def configure_logging(debug: bool = False) -> None:
     shared_processors: list[structlog.typing.Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
         timestamper,
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
@@ -58,7 +57,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(

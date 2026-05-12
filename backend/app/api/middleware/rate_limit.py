@@ -4,7 +4,6 @@ Routes import `limiter` and decorate endpoints with
 `@limiter.limit("N/unit")`. The limiter is installed on the FastAPI app
 in `main.py`.
 """
-from __future__ import annotations
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address

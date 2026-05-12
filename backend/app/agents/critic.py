@@ -10,7 +10,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.agents.prompts.critic import CRITIC_SYSTEM_PROMPT
-from app.core.config import settings
 from app.core.exceptions import AgentExecutionError
 from app.queue.redis_client import publish_task_update
 from app.schemas.agent import CriticVerdict
@@ -27,7 +26,6 @@ def _strip_fences(text: str) -> str:
 def _build_llm() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
         model="gemini-1.5-pro",
-        google_api_key=settings.GOOGLE_API_KEY,
         temperature=0.0,
         max_output_tokens=2048,
     )

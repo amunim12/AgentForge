@@ -1,8 +1,7 @@
 """JWT creation/validation and password hashing."""
-from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, cast
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -12,19 +11,19 @@ from app.core.exceptions import InvalidTokenError
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-ACCESS_TOKEN_TYPE = "access"
-REFRESH_TOKEN_TYPE = "refresh"
+ACCESS_TOKEN_TYPE = "access"  # noqa: S105
+REFRESH_TOKEN_TYPE = "refresh"  # noqa: S105
 
 
 def hash_password(password: str) -> str:
     """Hash a plaintext password using bcrypt."""
-    return _pwd_context.hash(password)
+    return cast(str, _pwd_context.hash(password))
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Constant-time verification of a plaintext password against a bcrypt hash."""
     try:
-        return _pwd_context.verify(plain, hashed)
+        return cast(bool, _pwd_context.verify(plain, hashed))
     except ValueError:
         return False
 
@@ -35,7 +34,7 @@ def _create_token(
     expires_delta: timedelta,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     payload: dict[str, Any] = {
         "sub": subject,
         "type": token_type,
@@ -44,7 +43,7 @@ def _create_token(
     }
     if extra_claims:
         payload.update(extra_claims)
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return cast(str, jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM))
 
 
 def create_access_token(
@@ -82,4 +81,4 @@ def decode_token(token: str, expected_type: str = ACCESS_TOKEN_TYPE) -> dict[str
         raise InvalidTokenError("Invalid token type")
     if "sub" not in payload:
         raise InvalidTokenError("Token missing subject claim")
-    return payload
+    return cast(dict[str, Any], payload)

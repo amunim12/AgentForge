@@ -44,6 +44,11 @@ exclude = ["tests/"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "-ra -q --strict-markers"
+filterwarnings = [
+    # protobuf 4.x C-extension uses a deprecated CPython metaclass API fixed in
+    # protobuf 5.x.  Upgrading is blocked by google-ai-generativelanguage<5.0.0dev.
+    "ignore:Type google._upb._message:DeprecationWarning",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "venv"]

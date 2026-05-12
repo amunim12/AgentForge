@@ -11,7 +11,6 @@ import pytest
 from app.agents import planner as planner_module
 from app.core.exceptions import AgentExecutionError
 
-
 VALID_PLAN = {
     "task_summary": "Compare three open-source vector databases.",
     "complexity": "medium",
@@ -60,7 +59,7 @@ def _patch_llm(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
     """Replace `_build_llm` so `prompt | llm` yields our fake stream."""
 
     class _FakeLLM:
-        def __or__(self, _other: Any) -> "_FakeLLM":
+        def __or__(self, _other: Any) -> _FakeLLM:
             return self
 
     # Patch the prompt-pipe pattern: ChatPromptTemplate | llm. The simplest

@@ -177,3 +177,4 @@ infra/terraform.tfvars
 infra/*.auto.tfvars
 
 .claude
+CLAUDE.md

@@ -3,7 +3,6 @@
 Auth: token is passed via query string `?token=<jwt>` since browsers
 cannot set custom Authorization headers on WebSocket upgrade.
 """
-from __future__ import annotations
 
 import structlog
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status

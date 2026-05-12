@@ -50,7 +50,7 @@ def _patch_llm(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
     fake_chain = _FakeChain([payload])
 
     class _FakeLLM:
-        def __or__(self, _other: Any) -> "_FakeLLM":
+        def __or__(self, _other: Any) -> _FakeLLM:
             return self
 
     class _FakePrompt:

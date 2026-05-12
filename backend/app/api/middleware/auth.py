@@ -5,7 +5,6 @@ Route-level authentication is enforced via `Depends(get_current_user)` in
 endpoints that need to parse tokens outside the dependency chain (e.g.
 WebSocket query-string auth).
 """
-from __future__ import annotations
 
 from fastapi.security import HTTPBearer
 

@@ -1,7 +1,7 @@
 """FastAPI application entrypoint for AgentForge."""
-from __future__ import annotations
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
@@ -33,7 +33,7 @@ os.environ.setdefault("LANGCHAIN_PROJECT", settings.LANGCHAIN_PROJECT)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting AgentForge API", app_name=settings.APP_NAME)
     await create_db_and_tables()
     await init_chroma()
@@ -54,11 +54,12 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # Rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]  # slowapi handler signature differs from starlette's expected type
 
 # CORS â allow only configured frontend origins.
 app.add_middleware(
